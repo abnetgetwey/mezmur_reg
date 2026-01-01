@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Group Employee Registration</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- PDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --input-bg: #0f172a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background-image: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 20%),
+                              radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 20%);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 30px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(to right, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1));
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #818cf8, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        header p { color: var(--text-muted); font-size: 0.95rem; }
+
+        .form-content { padding: 30px; }
+
+        /* Role Selection */
+        .role-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .role-card {
+            background-color: var(--input-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .role-card:hover { border-color: var(--primary-color); transform: translateY(-2px); }
+        .role-card.active {
+            border-color: var(--primary-color);
+            background-color: rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+        }
+        .role-card i { font-size: 2rem; margin-bottom: 10px; color: var(--text-muted); transition: color 0.3s; }
+        .role-card.active i { color: var(--primary-color); }
+        .role-card h3 { font-size: 1rem; color: var(--text-color); }
+
+        /* Dynamic Form */
+        #dynamic-form { display: none; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-color);
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .form-control:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
+        textarea.form-control { resize: vertical; min-height: 100px; }
+
+        /* Checkbox */
+        .checkbox-group {
+            display: flex; align-items: center;
+            background: var(--input-bg); padding: 12px 16px;
+            border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;
+        }
+        .checkbox-group:hover { background: #1e293b; }
+        .checkbox-group input[type="checkbox"] { margin-right: 12px; width: 18px; height: 18px; accent-color: var(--primary-color); cursor: pointer; }
+
+        /* File Upload */
+        .file-upload-wrapper {
+            position: relative; border: 2px dashed var(--border-color);
+            border-radius: 8px; padding: 20px; text-align: center;
+            transition: all 0.3s; cursor: pointer;
+        }
+        .file-upload-wrapper:hover { border-color: var(--primary-color); background: rgba(99, 102, 241, 0.05); }
+        .file-upload-wrapper input[type="file"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        .file-upload-content i { font-size: 1.5rem; color: var(--text-muted); margin-bottom: 8px; }
+        .file-upload-content p { font-size: 0.9rem; color: var(--text-muted); }
+        .file-name-display { margin-top: 8px; font-size: 0.85rem; color: var(--primary-color); font-weight: 600; }
+
+        /* Image Preview */
+        #image-preview-container { margin-top: 15px; display: none; justify-content: center; }
+        #image-preview { width: 120px; height: 120px; object-fit: cover; border-radius: 50%; border: 3px solid var(--primary-color); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+
+        /* Buttons */
+        .btn-submit {
+            width: 100%; padding: 14px; background-color: var(--primary-color); color: white;
+            border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer;
+            transition: background 0.3s, transform 0.1s;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+        }
+        .btn-submit:hover { background-color: var(--primary-hover); }
+        .btn-submit:disabled { background-color: var(--border-color); cursor: not-allowed; color: var(--text-muted); }
+
+        /* Validation & Toast */
+        .error-message { color: var(--error-color); font-size: 0.8rem; margin-top: 5px; display: none; }
+        .form-control.error { border-color: var(--error-color); }
+
+        .toast {
+            position: fixed; bottom: 30px; right: 30px;
+            background-color: var(--card-bg); border-left: 5px solid var(--success-color);
+            padding: 15px 25px; border-radius: 4px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            display: flex; align-items: center; gap: 15px;
+            transform: translateY(100px); opacity: 0; transition: all 0.5s ease; z-index: 1000;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast i { color: var(--success-color); font-size: 1.2rem; }
+
+        .spinner {
+            width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; display: none;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        @media (max-width: 480px) {
+            header h1 { font-size: 1.5rem; }
+            .form-content { padding: 20px; }
+            .role-card { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1><i class="fas fa-music"></i> ያም ዕዝራ የኦርቶዶክሳዊያን ዘማሪ እና መዘምራን መመዝገቢያ</h1>
+        <p>ማገልገል የሚፈልጉበትን ክፍል ይምረጡ</p>
+    </header>
+
+    <main class="form-content">
+        <!-- Role Selection -->
+        <section class="role-selection">
+            <div class="role-card" data-role="singer" onclick="selectRole('singer')">
+                <i class="fas fa-microphone-alt"></i>
+                <h3>ዘማሪ</h3>
+            </div>
+            <div class="role-card" data-role="player" onclick="selectRole('player')">
+                <i class="fas fa-kirar"></i>
+                <image src="kirar.png" style="width:32px; height:32px; margin-bottom:10px;">
+                <h3>የዜማ ተጫዋች</h3>
+            </div>
+            <div class="role-card" data-role="lead-singer" onclick="selectRole('lead-singer')">
+                <i class="fas fa-user-astronaut"></i>
+                <h3>መራሔ መዘምራን</h3>
+            </div>
+        </section>
+
+        <!-- Dynamic Form -->
+        <form id="dynamic-form" onsubmit="handleFormSubmit(event)">
+            <input type="hidden" id="selected-role" name="role" required>
+            <div id="common-fields"></div>
+            <div id="specific-fields"></div>
+
+            <button type="submit" class="btn-submit" id="submit-btn">
+                <span class="btn-text">Complete Registration</span>
+                <div class="spinner"></div>
+            </button>
+        </form>
+    </main>
+</div>
+
+<!-- Toast Notification -->
+<div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i>
+    <div class="toast-content">
+        <h4>Success!</h4>
+        <p>Registration sent to Admin.</p>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // CONFIGURATION SECTION
+    // ==========================================
+    
+    // 1. PASTE YOUR TELEGRAM BOT TOKEN HERE
+    const BOT_TOKEN = "7724087089:AAGNCaNH1Uo_KK8rsskhLHX1iF8saDg26CA"; 
+
+    // 2. PASTE YOUR ADMIN CHAT ID HERE
+    const ADMIN_CHAT_ID = "394828936";
+
+    // State
+    let currentRole = null;
+
+    // ==========================================
+    // FORM LOGIC
+    // ==========================================
+
+    const commonFields = [
+        { name: 'fullName', label: 'Full Name', type: 'text', placeholder: 'e.g. Abebe Kebede Lema', required: true },
+        { name: 'phone', label: 'Phone number', type: 'tel', placeholder: '+251909041424', required: true },
+        { name: 'telegram', label: 'Telegram Username', type: 'text', placeholder: '@username', required: true },
+        { name: 'address', label: 'Address', type: 'text', placeholder: 'City', required: true },
+        { name: 'email', label: 'Email Address', type: 'email', placeholder: 'kebede@example.com', required: true },
+        { name: 'profileImage', label: 'Profile Image', type: 'file', accept: 'image/png, image/jpeg, image/gif', required: true, isImage: true }
+    ];
+
+    const roleSpecificFields = {
+        singer: [
+            { name: 'hasSungBefore', label: 'ከዚ በፊት ዘምረው ያውቃሉ?', type: 'checkbox', required: false },
+            
+        ],
+        player: [
+            { name: 'hasPlayedBefore', label: 'ከዚ በፊት የዜማ መሳሪያ ተጫውተው ያውቃሉ?', type: 'checkbox', required: false },
+            { name: 'instrumentSample', label: 'የዜማ መሳሪያ ስትጫወቱ የሚያሰማ ድምጽ ይላኩ', type: 'file', accept: 'audio/*', required: true, isAudio: true },
+            { name: 'ownsInstrument', label: 'የራስዎት የዜማ መሳሪያ አሎት? ', type: 'checkbox', required: false }
+        ],
+        'lead-singer': [
+            { name: 'hasPerformedBefore', label: 'ከዚህ በፊት አውደ ምህረት ላይ ዘምረው ያውቃሉ?', type: 'checkbox', required: false },
+            { name: 'vocalSample', label: 'ሲዘምሩ የሚያሰማ ድምጽ ይላኩ', type: 'file', accept: 'audio/*', required: true, isAudio: true },
+            { name: 'previousWork', label: 'የሚያገለግሉበትን ደብር ወይም ያገለግሉ የነበረበትን ደብር ይግለፁ(የደብሩን ስም በእንግሊዘኛ ይፃፉ)', type: 'textarea', placeholder: 'Bole hohite birhan kidist Mariam', required: true }
+        ]
+    };
+
+    // Expose functions
+    window.selectRole = selectRole;
+    window.handleFormSubmit = handleFormSubmit;
+    window.handleImagePreview = handleImagePreview;
+
+    function selectRole(role) {
+        currentRole = role;
+        document.getElementById('selected-role').value = role;
+        document.querySelectorAll('.role-card').forEach(card => {
+            card.classList.remove('active');
+            if(card.dataset.role === role) card.classList.add('active');
+        });
+        renderForm();
+    }
+
+    function renderForm() {
+        const formContainer = document.getElementById('dynamic-form');
+        const commonContainer = document.getElementById('common-fields');
+        const specificContainer = document.getElementById('specific-fields');
+        commonContainer.innerHTML = '';
+        specificContainer.innerHTML = '';
+        formContainer.style.display = 'block';
+
+        commonFields.forEach(field => commonContainer.insertAdjacentHTML('beforeend', createFieldHTML(field)));
+        roleSpecificFields[currentRole].forEach(field => specificContainer.insertAdjacentHTML('beforeend', createFieldHTML(field)));
+
+        const imgInput = document.querySelector('input[name="profileImage"]');
+        if(imgInput) imgInput.addEventListener('change', (e) => handleImagePreview(e.target));
+
+        document.querySelectorAll('input[type="file"]').forEach(input => {
+            input.addEventListener('change', function(e) {
+                const fileName = e.target.files[0]?.name;
+                const display = e.target.parentElement.querySelector('.file-name-display');
+                if(display) display.textContent = fileName ? `Selected: ${fileName}` : '';
+            });
+        });
+    }
+
+    function createFieldHTML(field) {
+        const requiredAttr = field.required ? 'required' : '';
+        let inputHTML = '';
+
+        if (field.type === 'textarea') {
+            inputHTML = `<textarea class="form-control" name="${field.name}" id="${field.name}" placeholder="${field.placeholder || ''}" ${requiredAttr}></textarea>`;
+        } else if (field.type === 'checkbox') {
+            inputHTML = `<label class="checkbox-group"><input type="checkbox" name="${field.name}" id="${field.name}" value="yes"><span>${field.label}</span></label>`;
+        } else if (field.type === 'file') {
+            const icon = field.isAudio ? 'fa-microphone' : 'fa-cloud-upload-alt';
+            inputHTML = `<div class="file-upload-wrapper"><input type="file" name="${field.name}" id="${field.name}" accept="${field.accept}" ${requiredAttr}><div class="file-upload-content"><i class="fas ${icon}"></i><p>Click to upload ${field.label}</p><div class="file-name-display"></div></div></div>`;
+        } else {
+            inputHTML = `<input type="${field.type}" class="form-control" name="${field.name}" id="${field.name}" placeholder="${field.placeholder || ''}" ${requiredAttr}>`;
+        }
+        const errorMsg = `<div class="error-message" id="${field.name}-error">This field is required.</div>`;
+        
+        if (field.type === 'checkbox') return `<div class="form-group">${inputHTML}${errorMsg}</div>`;
+        return `<div class="form-group"><label for="${field.name}">${field.label} ${field.required ? '<span style="color:var(--error-color)">*</span>' : ''}</label>${inputHTML}${errorMsg}</div>`;
+    }
+
+    function handleImagePreview(input) {
+        const previewContainer = document.getElementById('image-preview-container');
+        const existingPreview = document.getElementById('image-preview');
+        if(existingPreview) existingPreview.remove();
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.id = 'image-preview';
+                img.src = e.target.result;
+                previewContainer.style.display = 'flex';
+                previewContainer.appendChild(img);
+            }
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            previewContainer.style.display = 'none';
+        }
+    }
+
+    // ==========================================
+    // MAIN SUBMISSION LOGIC
+    // ==========================================
+
+    async function handleFormSubmit(e) {
+        e.preventDefault();
+        
+        // Validation
+        document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.form-control').forEach(el => el.classList.remove('error'));
+        document.querySelectorAll('.file-upload-wrapper').forEach(el => el.style.borderColor = 'var(--border-color)');
+        
+        let isValid = true;
+        const formData = {};
+        const form = e.target;
+        const inputs = form.querySelectorAll('input, textarea');
+        
+        inputs.forEach(input => {
+            const errorDiv = document.getElementById(`${input.name}-error`);
+            if (input.type === 'checkbox') {
+                formData[input.name] = input.checked;
+            } else if (input.type === 'file') {
+                if (input.required && input.files.length === 0) {
+                    isValid = false;
+                    input.parentElement.style.borderColor = 'var(--error-color)';
+                    if(errorDiv) errorDiv.style.display = 'block';
+                } else {
+                    formData[input.name] = input.files[0];
+                }
+            } else {
+                if (input.required && !input.value.trim()) {
+                    isValid = false;
+                    input.classList.add('error');
+                    if(errorDiv) errorDiv.style.display = 'block';
+                }
+                formData[input.name] = input.value;
+            }
+        });
+
+        if (!isValid) {
+            const firstError = document.querySelector('.error');
+            if(firstError) firstError.scrollIntoView({behavior: 'smooth', block: 'center'});
+            return;
+        }
+
+        // --- TELEGRAM LOGIC START ---
+        const btn = document.getElementById('submit-btn');
+        const btnText = btn.querySelector('.btn-text');
+        const spinner = btn.querySelector('.spinner');
+
+        btn.disabled = true;
+        btnText.textContent = 'Generating PDF & Sending...';
+        spinner.style.display = 'block';
+
+        try {
+            // 1. Rename Files (Using user's name)
+            const safeName = formData.fullName.replace(/[^a-z0-9]/gi, '_').toLowerCase(); // Clean name for filenames
+            const originalExtImg = formData.profileImage.name.split('.').pop();
+            const renamedImage = new File([formData.profileImage], `${safeName}_Profile.${originalExtImg}`, { type: formData.profileImage.type });
+
+            let audioFile = null;
+            if (formData.vocalSample) audioFile = formData.vocalSample;
+            else if (formData.instrumentSample) audioFile = formData.instrumentSample;
+
+            let renamedAudio = null;
+            if (audioFile) {
+                const originalExtAud = audioFile.name.split('.').pop();
+                renamedAudio = new File([audioFile], `${safeName}_Audio.${originalExtAud}`, { type: audioFile.type });
+            }
+
+            // 2. Generate PDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Add Text to PDF
+            doc.setFontSize(18);
+            doc.text("Music Group Registration", 10, 20);
+            doc.setFontSize(12);
+            doc.text(`Role: ${currentRole.toUpperCase()}`, 10, 30);
+            doc.text(`Name: ${formData.fullName}`, 10, 40);
+            doc.text(`Phone: ${formData.phone}`, 10, 50);
+            doc.text(`Telegram: ${formData.telegram}`, 10, 60);
+            doc.text(`Email: ${formData.email}`, 10, 70);
+            doc.text(`Address: ${formData.address}`, 10, 80);
+            
+            // Add checkboxes info
+            let yPos = 100;
+            if (formData.hasSungBefore) { doc.text("Has sung before: Yes", 10, yPos); yPos += 10; }
+            if (formData.hasPlayedBefore) { doc.text("Has played before: Yes", 10, yPos); yPos += 10; }
+            if (formData.ownsInstrument) { doc.text("Owns Instrument: Yes", 10, yPos); yPos += 10; }
+            if (formData.hasPerformedBefore) { doc.text("Has performed before: Yes", 10, yPos); yPos += 10; }
+            if (formData.previousWork) {
+                doc.text("Previous Work:", 10, yPos); yPos += 10;
+                const splitText = doc.splitTextToSize(formData.previousWork, 180);
+                doc.text(splitText, 10, yPos); 
+            }
+
+            const pdfBlob = doc.output('blob');
+
+            // 3. Send to Telegram
+            const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`;
+
+            // Helper to send file
+            async function sendFile(file, caption, filename) {
+                const data = new FormData();
+                data.append('chat_id', ADMIN_CHAT_ID);
+                data.append('document', file, filename);
+                data.append('caption', caption);
+                const res = await fetch(telegramUrl, { method: 'POST', body: data });
+                return res.json();
+            }
+
+            // Send Image
+            await sendFile(renamedImage, `Profile Image of ${formData.fullName}`, renamedImage.name);
+
+            // Send Audio (if exists)
+            if (renamedAudio) {
+                await sendFile(renamedAudio, `Audio Sample from ${formData.fullName}`, renamedAudio.name);
+            }
+
+            // Send PDF
+            await sendFile(pdfBlob, `Registration Details PDF`, `${safeName}_Registration.pdf`);
+
+            // Success
+            showToast();
+            form.reset();
+            document.getElementById('dynamic-form').style.display = 'none';
+            document.querySelectorAll('.role-card').forEach(c => c.classList.remove('active'));
+            document.getElementById('image-preview-container').style.display = 'none';
+            currentRole = null;
+
+        } catch (error) {
+            console.error("Telegram Error:", error);
+            alert("Error sending to Telegram: " + error.message);
+        } finally {
+            btn.disabled = false;
+            btnText.textContent = 'Complete Registration';
+            spinner.style.display = 'none';
+        }
+    }
+
+    function showToast() {
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+</script>
+
+</body>
+</html>
